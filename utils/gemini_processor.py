@@ -1,5 +1,6 @@
 from typing import List, Dict
 import google.generativeai as genai
+import re
 
 class GeminiProcessor:
     def __init__(self, api_key: str):
@@ -8,22 +9,31 @@ class GeminiProcessor:
 
     def generate_article(self, video_data: List[Dict], language: str = 'ja') -> str:
         """Generate a summary from multiple video sources in specified language."""
-        # Prepare prompt with video information
         prompt = self._prepare_prompt(video_data, language)
         
         try:
-            # Add specific language instruction to the model
+            # Configure generation parameters based on language
+            temperature = 0.9 if language == 'zh' else 0.7  # Higher temperature for more natural Chinese
             response = self.model.generate_content(
                 prompt,
                 generation_config={
-                    'temperature': 0.7,
-                    'top_p': 0.8,
+                    'temperature': temperature,
+                    'top_p': 0.95,  # Increased for more diverse Chinese expressions
                     'top_k': 40,
+                    'candidate_count': 1,
                 }
             )
             return response.text
         except Exception as e:
             raise Exception(f"Gemini AI error: {str(e)}")
+
+    def _preprocess_chinese_text(self, text: str) -> str:
+        """Preprocess Chinese text to handle encoding and segmentation properly."""
+        # Remove extra whitespace between Chinese characters
+        text = re.sub(r'([^\x00-\xff])\s+([^\x00-\xff])', r'\1\2', text)
+        # Ensure proper sentence breaks at Chinese punctuation
+        text = re.sub(r'([。！？；])\s*', r'\1\n', text)
+        return text
 
     def _prepare_prompt(self, video_data: List[Dict], language: str) -> str:
         """Prepare prompt for Gemini AI with language specification."""
@@ -51,37 +61,61 @@ Please create a well-structured summary that:
 6. Focuses on important information
 
 Generate all output in English.""",
+            
+            'zh': """【输出要求】
+使用简体中文生成视频内容摘要。
 
-            'zh': """请根据以下YouTube视频内容生成一个全面而简洁的中文摘要。
+【摘要结构】
+1. 核心要点
+- 提取视频的主要观点
+- 突出关键信息
+- 保持逻辑连贯
 
-摘要必须满足以下要求：
-1. 提炼并整合所有视频中的核心观点
-2. 准确引用关键内容和重要参考信息
-3. 采用清晰的层次结构组织内容
-4. 使用准确、简洁的中文表达
-5. 保持专业的写作风格
-6. 突出重点信息，避免冗余
-7. 确保行文流畅，逻辑清晰
+2. 表达方式
+- 使用规范的简体中文
+- 保持专业性
+- 确保表达自然流畅
 
-重要说明：
-- 请使用标准中文（简体）
-- 保持专业性和可读性的平衡
-- 确保语言表达地道自然
+3. 专业术语
+- 使用准确的中文术语
+- 必要时保留英文原文
 
-请用中文生成所有内容。如果视频包含专业术语，请确保使用准确的中文术语对应。"""
+【重要提示】
+• 确保中文表达地道自然
+• 避免生硬的翻译腔
+• 保持专业性的同时确保可读性"""
         }
 
-        # Add language-specific preprocessing instructions
-        prompt = f"Target Language: {language}\n\n"
+        # Start with explicit language instruction
+        prompt = f"Output Language: {language}\n"
+        if language == 'zh':
+            prompt += "请使用标准简体中文输出所有内容。确保使用地道的中文表达。\n\n"
         prompt += language_prompt[language] + "\n\n"
         
+        # Process video data
         for video in video_data:
             if 'error' not in video:
-                prompt += f"视频标题" if language == 'zh' else "Video Title"
-                prompt += f": {video['title']}\n"
-                # Limit transcript length but ensure we don't cut in the middle of a sentence
-                transcript = video['transcript'][:2000].rsplit('.', 1)[0] + '...'
-                prompt += f"内容记录" if language == 'zh' else "Transcript"
-                prompt += f": {transcript}\n\n"
+                # Use Chinese labels for Chinese output
+                title_label = "标题：" if language == 'zh' else "Title: "
+                content_label = "内容：" if language == 'zh' else "Content: "
+                
+                prompt += f"{title_label}{video['title']}\n"
+                
+                # Preprocess transcript for Chinese content
+                transcript = video['transcript']
+                if language == 'zh':
+                    # Limit transcript length at character boundaries
+                    if len(transcript) > 2000:
+                        transcript = transcript[:2000]
+                        # Find last complete Chinese sentence
+                        last_period = max(transcript.rfind('。'), transcript.rfind('！'), transcript.rfind('？'))
+                        if last_period > 0:
+                            transcript = transcript[:last_period + 1]
+                    transcript = self._preprocess_chinese_text(transcript)
+                else:
+                    # For non-Chinese content, use simple truncation
+                    transcript = transcript[:2000].rsplit('.', 1)[0] + '...'
+                
+                prompt += f"{content_label}{transcript}\n\n"
         
         return prompt
