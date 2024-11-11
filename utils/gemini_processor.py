@@ -12,7 +12,15 @@ class GeminiProcessor:
         prompt = self._prepare_prompt(video_data, language)
         
         try:
-            response = self.model.generate_content(prompt)
+            # Add specific language instruction to the model
+            response = self.model.generate_content(
+                prompt,
+                generation_config={
+                    'temperature': 0.7,
+                    'top_p': 0.8,
+                    'top_k': 40,
+                }
+            )
             return response.text
         except Exception as e:
             raise Exception(f"Gemini AI error: {str(e)}")
@@ -44,24 +52,36 @@ Please create a well-structured summary that:
 
 Generate all output in English.""",
 
-            'zh': """根据以下YouTube视频生成简明扼要的摘要：
+            'zh': """请根据以下YouTube视频内容生成一个全面而简洁的中文摘要。
 
-请创建一个结构完善的摘要，要求：
-1. 整合所有视频的重点信息
-2. 包含重要引用和参考
-3. 结构清晰有序
-4. 使用简洁明了的语言
-5. 保持专业的语气
-6. 突出重要信息
+摘要必须满足以下要求：
+1. 提炼并整合所有视频中的核心观点
+2. 准确引用关键内容和重要参考信息
+3. 采用清晰的层次结构组织内容
+4. 使用准确、简洁的中文表达
+5. 保持专业的写作风格
+6. 突出重点信息，避免冗余
+7. 确保行文流畅，逻辑清晰
 
-所有输出均使用中文生成。"""
+重要说明：
+- 请使用标准中文（简体）
+- 保持专业性和可读性的平衡
+- 确保语言表达地道自然
+
+请用中文生成所有内容。如果视频包含专业术语，请确保使用准确的中文术语对应。"""
         }
 
-        prompt = language_prompt[language] + "\n\n"
+        # Add language-specific preprocessing instructions
+        prompt = f"Target Language: {language}\n\n"
+        prompt += language_prompt[language] + "\n\n"
         
         for video in video_data:
             if 'error' not in video:
-                prompt += f"Video Title: {video['title']}\n"
-                prompt += f"Transcript: {video['transcript'][:1000]}...\n\n"
+                prompt += f"视频标题" if language == 'zh' else "Video Title"
+                prompt += f": {video['title']}\n"
+                # Limit transcript length but ensure we don't cut in the middle of a sentence
+                transcript = video['transcript'][:2000].rsplit('.', 1)[0] + '...'
+                prompt += f"内容记录" if language == 'zh' else "Transcript"
+                prompt += f": {transcript}\n\n"
         
         return prompt
