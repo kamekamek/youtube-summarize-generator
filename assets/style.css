@@ -1,0 +1,33 @@
+.article-container {
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 10px 0;
+}
+
+.article-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #1E1E1E;
+}
+
+.article-content {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #333;
+}
+
+.error-message {
+    color: #FF4B4B;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #FFE5E5;
+}
+
+.source-link {
+    color: #FF4B4B;
+    text-decoration: none;
+    font-size: 14px;
+}
