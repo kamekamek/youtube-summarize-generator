@@ -18,6 +18,8 @@ TRANSLATIONS = {
         'generated_article': '生成された記事',
         'sources': 'ソース',
         'language_selector': '言語を選択',
+        'summary_toggle': '要約を生成',
+        'recommendations': 'おすすめの動画'
     },
     'en': {
         'page_title': 'YouTube Video Article Generator',
@@ -33,6 +35,25 @@ TRANSLATIONS = {
         'generated_article': 'Generated Article',
         'sources': 'Sources',
         'language_selector': 'Select Language',
+        'summary_toggle': 'Generate Summary',
+        'recommendations': 'Recommended Videos'
+    },
+    'zh': {
+        'page_title': 'YouTube视频文章生成器',
+        'app_description': '使用AI将多个YouTube视频转换为综合文章。\n在下方输入YouTube视频URL（每行一个）。',
+        'url_input_label': '输入YouTube URL（每行一个）',
+        'url_input_help': '粘贴YouTube URL，每行一个',
+        'generate_button': '生成文章',
+        'invalid_urls': '请输入有效的YouTube URL',
+        'processing_videos': '正在处理视频...',
+        'generating_article': '正在生成文章...',
+        'error_occurred': '发生错误：',
+        'error_processing': '处理出错 ',
+        'generated_article': '生成的文章',
+        'sources': '来源',
+        'language_selector': '选择语言',
+        'summary_toggle': '生成摘要',
+        'recommendations': '推荐视频'
     }
 }
 
@@ -55,6 +76,8 @@ def initialize_session_state():
         st.session_state.processing = False
     if 'language' not in st.session_state:
         st.session_state.language = 'ja'  # Default to Japanese
+    if 'generate_summary' not in st.session_state:
+        st.session_state.generate_summary = False
 
 def validate_urls(urls: list) -> list:
     """Validate YouTube URLs."""
@@ -74,14 +97,17 @@ def main():
     # Language selector
     st.selectbox(
         get_text('language_selector'),
-        options=['ja', 'en'],
-        index=0 if st.session_state.language == 'ja' else 1,
-        format_func=lambda x: '日本語' if x == 'ja' else 'English',
+        options=['ja', 'en', 'zh'],
+        index=['ja', 'en', 'zh'].index(st.session_state.language),
+        format_func=lambda x: '日本語' if x == 'ja' else 'English' if x == 'en' else '中文',
         key='language'
     )
     
     st.title(f"📝 {get_text('page_title')}")
     st.markdown(get_text('app_description'))
+
+    # Summary toggle
+    st.checkbox(get_text('summary_toggle'), key='generate_summary')
 
     # Input area for YouTube URLs
     urls_input = st.text_area(
@@ -90,8 +116,10 @@ def main():
         help=get_text('url_input_help')
     )
 
+    col1, col2 = st.columns([2, 1])
+
     # Process button
-    if st.button(get_text('generate_button'), disabled=st.session_state.processing):
+    if col1.button(get_text('generate_button'), disabled=st.session_state.processing):
         urls = urls_input.split('\n')
         valid_urls = validate_urls(urls)
 
@@ -120,8 +148,17 @@ def main():
 
             # Generate article
             with st.spinner(get_text('generating_article')):
-                article = gemini_processor.generate_article(video_data, language=st.session_state.language)
+                article = gemini_processor.generate_article(
+                    video_data, 
+                    language=st.session_state.language,
+                    generate_summary=st.session_state.generate_summary
+                )
                 st.session_state.generated_article = article
+
+                # Get video recommendations
+                if len(valid_urls) > 0:
+                    recommendations = youtube_handler.get_recommendations(valid_urls[0])
+                    st.session_state.recommendations = recommendations
 
         except Exception as e:
             st.error(f"{get_text('error_occurred')}{str(e)}")
@@ -140,6 +177,17 @@ def main():
         for url in validate_urls(urls_input.split('\n')):
             st.markdown(f'<a href="{url}" class="source-link" target="_blank">{url}</a>', 
                        unsafe_allow_html=True)
+        
+        # Display recommendations
+        if hasattr(st.session_state, 'recommendations'):
+            st.markdown(f"### {get_text('recommendations')}")
+            for video in st.session_state.recommendations:
+                st.markdown(
+                    f'<a href="https://youtube.com/watch?v={video["id"]}" class="video-recommendation" target="_blank">'
+                    f'<img src="{video["thumbnail"]}" style="width:120px;margin-right:10px;">'
+                    f'{video["title"]}</a>',
+                    unsafe_allow_html=True
+                )
 
 if __name__ == "__main__":
     main()

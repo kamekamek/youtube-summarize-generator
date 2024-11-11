@@ -1,33 +1,112 @@
-.article-container {
-    padding: 20px;
-    background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin: 10px 0;
+/* Retro Theme */
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+/* Main container */
+.stApp {
+    background: #2b2b2b;
+    color: #33ff33;
+    font-family: 'VT323', monospace;
 }
 
+/* Headers */
+h1, h2, h3 {
+    color: #33ff33 !important;
+    text-shadow: 0 0 5px #33ff33;
+    font-family: 'VT323', monospace;
+}
+
+/* Article container */
+.article-container {
+    padding: 20px;
+    background-color: #1a1a1a;
+    border: 2px solid #33ff33;
+    border-radius: 0;
+    box-shadow: 0 0 10px #33ff33;
+    margin: 10px 0;
+    color: #33ff33;
+}
+
+/* Title */
 .article-title {
     font-size: 24px;
     font-weight: bold;
     margin-bottom: 15px;
-    color: #1E1E1E;
+    color: #33ff33;
 }
 
+/* Content */
 .article-content {
     font-size: 16px;
     line-height: 1.6;
-    color: #333;
+    color: #33ff33;
 }
 
+/* Error message */
 .error-message {
-    color: #FF4B4B;
+    color: #ff3333;
     padding: 10px;
-    border-radius: 5px;
-    background-color: #FFE5E5;
+    border: 2px solid #ff3333;
+    background-color: #1a1a1a;
 }
 
+/* Source link */
 .source-link {
-    color: #FF4B4B;
+    color: #33ff33;
     text-decoration: none;
     font-size: 14px;
+    border-bottom: 1px solid #33ff33;
+    margin: 5px 0;
+    display: inline-block;
+}
+
+/* Video recommendations */
+.video-recommendation {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin: 5px 0;
+    background: #1a1a1a;
+    border: 1px solid #33ff33;
+    color: #33ff33;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.video-recommendation:hover {
+    background: #333;
+    box-shadow: 0 0 10px #33ff33;
+}
+
+/* Streamlit elements override */
+.stTextInput > div > div > input,
+.stTextArea > div > div > textarea {
+    background-color: #1a1a1a !important;
+    color: #33ff33 !important;
+    border: 2px solid #33ff33 !important;
+    font-family: 'VT323', monospace;
+}
+
+.stButton > button {
+    background-color: #1a1a1a !important;
+    color: #33ff33 !important;
+    border: 2px solid #33ff33 !important;
+    font-family: 'VT323', monospace;
+    box-shadow: 0 0 5px #33ff33;
+}
+
+.stButton > button:hover {
+    background-color: #333 !important;
+    box-shadow: 0 0 10px #33ff33;
+}
+
+.stSelectbox > div > div {
+    background-color: #1a1a1a !important;
+    color: #33ff33 !important;
+    border: 2px solid #33ff33 !important;
+}
+
+/* Checkbox */
+.stCheckbox > label > div {
+    background-color: #1a1a1a !important;
+    border: 2px solid #33ff33 !important;
 }

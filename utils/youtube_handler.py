@@ -43,10 +43,34 @@ class YouTubeHandler:
     def get_transcript(self, video_id: str) -> str:
         """Get video transcript."""
         try:
-            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=['en', 'ja'])
+            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=['en', 'ja', 'zh'])
             return " ".join([entry['text'] for entry in transcript_list])
         except Exception as e:
             raise Exception(f"Could not fetch transcript: {str(e)}")
+
+    def get_recommendations(self, url: str, max_results: int = 5) -> List[Dict]:
+        """Get video recommendations based on a video."""
+        try:
+            video_id = self.extract_video_id(url)
+            response = self.youtube.search().list(
+                part='snippet',
+                relatedToVideoId=video_id,
+                type='video',
+                maxResults=max_results
+            ).execute()
+
+            recommendations = []
+            for item in response.get('items', []):
+                if item['id']['kind'] == 'youtube#video':
+                    recommendations.append({
+                        'id': item['id']['videoId'],
+                        'title': item['snippet']['title'],
+                        'thumbnail': item['snippet']['thumbnails']['default']['url']
+                    })
+            return recommendations
+        except Exception as e:
+            print(f"Error getting recommendations: {str(e)}")
+            return []
 
     def process_videos(self, urls: List[str]) -> List[Dict]:
         """Process multiple YouTube videos."""
