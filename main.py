@@ -56,9 +56,9 @@ def main():
         try:
             st.session_state.processing = True
 
-            # Initialize handlers
-            youtube_handler = YouTubeHandler(api_key="YOUR_YOUTUBE_API_KEY")
-            gemini_processor = GeminiProcessor(api_key="YOUR_GEMINI_API_KEY")
+            # Initialize handlers with environment variables
+            youtube_handler = YouTubeHandler(api_key=os.environ['YOUTUBE_API_KEY'])
+            gemini_processor = GeminiProcessor(api_key=os.environ['GEMINI_API_KEY'])
 
             # Process videos
             with st.spinner("Processing videos..."):
