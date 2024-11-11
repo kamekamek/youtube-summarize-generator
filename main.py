@@ -5,61 +5,58 @@ from utils import YouTubeHandler, GeminiProcessor
 # Translations dictionary
 TRANSLATIONS = {
     'ja': {
-        'page_title': 'YouTube動画記事ジェネレーター',
-        'app_description': '複数のYouTube動画をAIを使用して包括的な記事に変換します。\n以下にYouTube動画のURLを入力してください。',
+        'page_title': '要約ジェネレーター',
+        'app_description': '複数のYouTube動画をAIを使用して包括的な要約に変換します。\n以下にYouTube動画のURLを入力してください。',
         'url_input_label': 'YouTubeのURL（1行に1つ）',
         'url_input_help': 'YouTubeのURLを1行に1つずつ貼り付けてください',
-        'generate_button': '記事を生成',
+        'generate_button': '要約を生成',
         'invalid_urls': '有効なYouTube URLを入力してください',
         'processing_videos': '動画を処理中...',
-        'generating_article': '記事を生成中...',
+        'generating_article': '要約を生成中...',
         'error_occurred': 'エラーが発生しました：',
         'error_processing': '処理中にエラーが発生しました ',
-        'generated_article': '生成された記事',
+        'generated_article': '生成された要約',
         'sources': 'ソース',
         'language_selector': '言語を選択',
-        'summary_toggle': '要約を生成',
         'recommendations': 'おすすめの動画'
     },
     'en': {
-        'page_title': 'YouTube Video Article Generator',
-        'app_description': 'Transform multiple YouTube videos into a comprehensive article using AI.\nEnter YouTube video URLs (one per line) below.',
+        'page_title': 'Summary Generator',
+        'app_description': 'Transform multiple YouTube videos into a comprehensive summary using AI.\nEnter YouTube video URLs (one per line) below.',
         'url_input_label': 'Enter YouTube URLs (one per line)',
         'url_input_help': 'Paste YouTube URLs, one per line',
-        'generate_button': 'Generate Article',
+        'generate_button': 'Generate Summary',
         'invalid_urls': 'Please enter valid YouTube URLs',
         'processing_videos': 'Processing videos...',
-        'generating_article': 'Generating article...',
+        'generating_article': 'Generating summary...',
         'error_occurred': 'An error occurred: ',
         'error_processing': 'Error processing ',
-        'generated_article': 'Generated Article',
+        'generated_article': 'Generated Summary',
         'sources': 'Sources',
         'language_selector': 'Select Language',
-        'summary_toggle': 'Generate Summary',
         'recommendations': 'Recommended Videos'
     },
     'zh': {
-        'page_title': 'YouTube视频文章生成器',
-        'app_description': '使用AI将多个YouTube视频转换为综合文章。\n在下方输入YouTube视频URL（每行一个）。',
+        'page_title': '摘要生成器',
+        'app_description': '使用AI将多个YouTube视频转换为综合摘要。\n在下方输入YouTube视频URL（每行一个）。',
         'url_input_label': '输入YouTube URL（每行一个）',
         'url_input_help': '粘贴YouTube URL，每行一个',
-        'generate_button': '生成文章',
+        'generate_button': '生成摘要',
         'invalid_urls': '请输入有效的YouTube URL',
         'processing_videos': '正在处理视频...',
-        'generating_article': '正在生成文章...',
+        'generating_article': '正在生成摘要...',
         'error_occurred': '发生错误：',
         'error_processing': '处理出错 ',
-        'generated_article': '生成的文章',
+        'generated_article': '生成的摘要',
         'sources': '来源',
         'language_selector': '选择语言',
-        'summary_toggle': '生成摘要',
         'recommendations': '推荐视频'
     }
 }
 
 # Page configuration
 st.set_page_config(
-    page_title="YouTube Video Article Generator",
+    page_title="Summary Generator",
     page_icon="📝",
     layout="wide"
 )
@@ -76,8 +73,6 @@ def initialize_session_state():
         st.session_state.processing = False
     if 'language' not in st.session_state:
         st.session_state.language = 'ja'  # Default to Japanese
-    if 'generate_summary' not in st.session_state:
-        st.session_state.generate_summary = False
 
 def validate_urls(urls: list) -> list:
     """Validate YouTube URLs."""
@@ -105,9 +100,6 @@ def main():
     
     st.title(f"📝 {get_text('page_title')}")
     st.markdown(get_text('app_description'))
-
-    # Summary toggle
-    st.checkbox(get_text('summary_toggle'), key='generate_summary')
 
     # Input area for YouTube URLs
     urls_input = st.text_area(
@@ -150,8 +142,7 @@ def main():
             with st.spinner(get_text('generating_article')):
                 article = gemini_processor.generate_article(
                     video_data, 
-                    language=st.session_state.language,
-                    generate_summary=st.session_state.generate_summary
+                    language=st.session_state.language
                 )
                 st.session_state.generated_article = article
 
