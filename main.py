@@ -184,15 +184,6 @@ def main():
         # Initialize session state (includes database connection)
         initialize_session_state()
         
-        # Language selector
-        st.selectbox(
-            get_text('language_selector'),
-            options=['ja', 'en', 'zh'],
-            index=['ja', 'en', 'zh'].index(st.session_state.language),
-            format_func=lambda x: '日本語' if x == 'ja' else 'English' if x == 'en' else '中文',
-            key='language'
-        )
-        
         st.title(f"📝 {get_text('page_title')}")
         st.markdown(get_text('app_description'))
 
