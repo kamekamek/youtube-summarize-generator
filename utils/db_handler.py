@@ -4,6 +4,7 @@ from postgrest import AsyncPostgrestClient
 import asyncio
 from typing import List, Optional
 import urllib.parse
+from functools import wraps
 
 class VideoSummary:
     def __init__(self, id: int, video_id: str, title: str, summary: str, 
@@ -16,12 +17,24 @@ class VideoSummary:
         self.timestamp = timestamp
         self.source_urls = source_urls
 
+def ensure_event_loop():
+    """Ensure there's an event loop set for the current thread."""
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    return loop
+
 class DatabaseHandler:
     def __init__(self):
         try:
             # Parse Supabase URL and auth key
-            supabase_url = os.environ['SUPABASE_URL']
-            supabase_key = os.environ['SUPABASE_KEY']
+            supabase_url = os.environ.get('SUPABASE_URL')
+            supabase_key = os.environ.get('SUPABASE_KEY')
+            
+            if not supabase_url or not supabase_key:
+                raise ValueError("Supabase credentials not found in environment variables")
             
             # Extract the host and construct REST URL
             parsed_url = urllib.parse.urlparse(supabase_url)
@@ -37,8 +50,7 @@ class DatabaseHandler:
             )
             
             # Test connection
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+            loop = ensure_event_loop()
             loop.run_until_complete(self._verify_connection())
             
         except Exception as e:
@@ -49,13 +61,13 @@ class DatabaseHandler:
         try:
             await self.client.from_("video_summaries").select("id").limit(1).execute()
             return True
-        except Exception:
+        except Exception as e:
+            print(f"Connection verification failed: {str(e)}")
             return False
 
     def verify_connection(self) -> bool:
         """Synchronous wrapper for connection verification."""
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        loop = ensure_event_loop()
         return loop.run_until_complete(self._verify_connection())
 
     async def _save_summary(self, video_id: str, title: str, summary: str, 
@@ -81,8 +93,7 @@ class DatabaseHandler:
         if not self.verify_connection():
             raise Exception("Database connection is not active")
         
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        loop = ensure_event_loop()
         return loop.run_until_complete(
             self._save_summary(video_id, title, summary, language, source_urls)
         )
@@ -107,18 +118,21 @@ class DatabaseHandler:
                     source_urls=item['source_urls']
                 )
                 for item in response.data
-            ]
+            ] if response.data else []
         except Exception as e:
-            raise Exception(f"Database error: {str(e)}")
+            print(f"Error fetching recent summaries: {str(e)}")
+            return []
 
     def get_recent_summaries(self, limit: int = 5) -> List[VideoSummary]:
         """Get recent summaries from the database."""
-        if not self.verify_connection():
-            raise Exception("Database connection is not active")
-        
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        return loop.run_until_complete(self._get_recent_summaries(limit))
+        try:
+            if not self.verify_connection():
+                return []
+            
+            loop = ensure_event_loop()
+            return loop.run_until_complete(self._get_recent_summaries(limit))
+        except Exception:
+            return []
 
     async def _get_summaries_by_language(self, language: str, 
                                        limit: int = 5) -> List[VideoSummary]:
@@ -142,21 +156,24 @@ class DatabaseHandler:
                     source_urls=item['source_urls']
                 )
                 for item in response.data
-            ]
+            ] if response.data else []
         except Exception as e:
-            raise Exception(f"Database error: {str(e)}")
+            print(f"Error fetching summaries by language: {str(e)}")
+            return []
 
     def get_summaries_by_language(self, language: str, 
                                 limit: int = 5) -> List[VideoSummary]:
         """Get summaries filtered by language."""
-        if not self.verify_connection():
-            raise Exception("Database connection is not active")
-        
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        return loop.run_until_complete(
-            self._get_summaries_by_language(language, limit)
-        )
+        try:
+            if not self.verify_connection():
+                return []
+            
+            loop = ensure_event_loop()
+            return loop.run_until_complete(
+                self._get_summaries_by_language(language, limit)
+            )
+        except Exception:
+            return []
 
     def __del__(self):
         """Cleanup."""

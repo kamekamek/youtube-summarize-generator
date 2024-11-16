@@ -4,10 +4,14 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
+    "aiohttp>=3.11.2",
+    "asyncio>=3.4.3",
     "google-api-python-client>=2.151.0",
     "google-generativeai>=0.8.3",
+    "postgrest>=0.10.6",
     "postgrest-py>=0.10.6",
     "psycopg2-binary>=2.9.10",
+    "python-dotenv>=1.0.1",
     "sqlalchemy>=2.0.36",
     "streamlit>=1.40.0",
     "youtube-transcript-api>=0.6.2",
