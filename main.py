@@ -45,7 +45,18 @@ TRANSLATIONS = {
         'history_section': '履歴',
         'db_connecting': 'データベースに接続中...',
         'db_connected': 'データベース接続完了',
-        'db_connection_failed': 'データベース接続に失敗しました'
+        'db_connection_failed': 'データベース接続に失敗しました',
+        'settings_title': '設定',
+        'development_section': '開発',
+        'appearance_section': '外観',
+        'run_on_save': '保存時に実行',
+        'run_on_save_desc': 'コードが更新されたときに自動的にアプリを更新します',
+        'wide_mode': 'ワイドモード',
+        'wide_mode_desc': '画面幅いっぱいにアプリを表示',
+        'theme_settings': 'テーマ設定',
+        'language_settings': '言語設定',
+        'theme_colors_fonts': 'アプリのテーマ、色、フォントを選択',
+        'current_language': '現在の言語'
     },
     'en': {
         'page_title': 'Summary Generator',
@@ -75,7 +86,18 @@ TRANSLATIONS = {
         'history_section': 'History',
         'db_connecting': 'Connecting to database...',
         'db_connected': 'Database connected successfully',
-        'db_connection_failed': 'Database connection failed'
+        'db_connection_failed': 'Database connection failed',
+        'settings_title': 'Settings',
+        'development_section': 'Development',
+        'appearance_section': 'Appearance',
+        'run_on_save': 'Run on save',
+        'run_on_save_desc': 'Automatically updates the app when the underlying code is updated',
+        'wide_mode': 'Wide mode',
+        'wide_mode_desc': 'Turn on to make this app occupy the entire width of the screen',
+        'theme_settings': 'Theme Settings',
+        'language_settings': 'Language Settings',
+        'theme_colors_fonts': 'Choose app theme, colors and fonts',
+        'current_language': 'Current Language'
     },
     'zh': {
         'page_title': '摘要生成器',
@@ -105,7 +127,18 @@ TRANSLATIONS = {
         'history_section': '历史记录',
         'db_connecting': '正在连接数据库...',
         'db_connected': '数据库连接成功',
-        'db_connection_failed': '数据库连接失败'
+        'db_connection_failed': '数据库连接失败',
+        'settings_title': '设置',
+        'development_section': '开发',
+        'appearance_section': '外观',
+        'run_on_save': '保存时运行',
+        'run_on_save_desc': '代码更新时自动更新应用',
+        'wide_mode': '宽屏模式',
+        'wide_mode_desc': '启用以使应用占据整个屏幕宽度',
+        'theme_settings': '主题设置',
+        'language_settings': '语言设置',
+        'theme_colors_fonts': '选择应用主题、颜色和字体',
+        'current_language': '当前语言'
     }
 }
 
