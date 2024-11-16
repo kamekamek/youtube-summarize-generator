@@ -1,111 +1,163 @@
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
-from sqlalchemy.pool import QueuePool
 from datetime import datetime
 import os
+from postgrest import AsyncPostgrestClient
+import asyncio
+from typing import List, Optional
+import urllib.parse
 
-Base = declarative_base()
-
-class VideoSummary(Base):
-    __tablename__ = 'video_summaries'
-    
-    id = Column(Integer, primary_key=True)
-    video_id = Column(String(20), nullable=False)
-    title = Column(String(255), nullable=False)
-    summary = Column(Text, nullable=False)
-    language = Column(String(2), nullable=False)
-    timestamp = Column(DateTime, default=datetime.utcnow)
-    source_urls = Column(Text, nullable=False)
+class VideoSummary:
+    def __init__(self, id: int, video_id: str, title: str, summary: str, 
+                 language: str, timestamp: datetime, source_urls: str):
+        self.id = id
+        self.video_id = video_id
+        self.title = title
+        self.summary = summary
+        self.language = language
+        self.timestamp = timestamp
+        self.source_urls = source_urls
 
 class DatabaseHandler:
     def __init__(self):
         try:
-            database_url = os.environ['DATABASE_URL']
-            if database_url.startswith('postgres://'):
-                database_url = database_url.replace('postgres://', 'postgresql://', 1)
+            # Parse Supabase URL and auth key
+            supabase_url = os.environ['SUPABASE_URL']
+            supabase_key = os.environ['SUPABASE_KEY']
             
-            self.engine = create_engine(
-                database_url,
-                poolclass=QueuePool,
-                pool_size=5,
-                max_overflow=10,
-                pool_timeout=30,
-                pool_pre_ping=True
+            # Extract the host and construct REST URL
+            parsed_url = urllib.parse.urlparse(supabase_url)
+            rest_url = f"{parsed_url.scheme}://{parsed_url.netloc}/rest/v1"
+            
+            # Initialize Postgrest client
+            self.client = AsyncPostgrestClient(
+                base_url=rest_url,
+                headers={
+                    "apikey": supabase_key,
+                    "Authorization": f"Bearer {supabase_key}"
+                }
             )
-            Base.metadata.create_all(self.engine)
-            Session = sessionmaker(bind=self.engine)
-            self.session = Session()
+            
             # Test connection
-            self.session.execute(text("SELECT 1"))
-            self.session.commit()
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(self._verify_connection())
+            
         except Exception as e:
             raise Exception(f"Failed to initialize database connection: {str(e)}")
 
-    def verify_connection(self):
+    async def _verify_connection(self) -> bool:
         """Verify database connection is active."""
         try:
-            self.session.execute(text("SELECT 1"))
-            self.session.commit()
+            await self.client.from_("video_summaries").select("id").limit(1).execute()
             return True
         except Exception:
             return False
 
-    def save_summary(self, video_id: str, title: str, summary: str, language: str, source_urls: str):
+    def verify_connection(self) -> bool:
+        """Synchronous wrapper for connection verification."""
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop.run_until_complete(self._verify_connection())
+
+    async def _save_summary(self, video_id: str, title: str, summary: str, 
+                          language: str, source_urls: str) -> bool:
+        """Async method to save a video summary."""
+        try:
+            data = {
+                "video_id": video_id,
+                "title": title,
+                "summary": summary,
+                "language": language,
+                "source_urls": source_urls,
+                "timestamp": datetime.utcnow().isoformat()
+            }
+            await self.client.from_("video_summaries").insert(data).execute()
+            return True
+        except Exception as e:
+            raise Exception(f"Database error: {str(e)}")
+
+    def save_summary(self, video_id: str, title: str, summary: str, 
+                    language: str, source_urls: str) -> bool:
         """Save a video summary to the database."""
         if not self.verify_connection():
             raise Exception("Database connection is not active")
-            
+        
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop.run_until_complete(
+            self._save_summary(video_id, title, summary, language, source_urls)
+        )
+
+    async def _get_recent_summaries(self, limit: int = 5) -> List[VideoSummary]:
+        """Async method to get recent summaries."""
         try:
-            summary_entry = VideoSummary(
-                video_id=video_id,
-                title=title,
-                summary=summary,
-                language=language,
-                source_urls=source_urls
-            )
-            self.session.add(summary_entry)
-            self.session.commit()
-            return True
+            response = await self.client.from_("video_summaries")\
+                .select("*")\
+                .order("timestamp", desc=True)\
+                .limit(limit)\
+                .execute()
+            
+            return [
+                VideoSummary(
+                    id=item['id'],
+                    video_id=item['video_id'],
+                    title=item['title'],
+                    summary=item['summary'],
+                    language=item['language'],
+                    timestamp=datetime.fromisoformat(item['timestamp']),
+                    source_urls=item['source_urls']
+                )
+                for item in response.data
+            ]
         except Exception as e:
-            self.session.rollback()
             raise Exception(f"Database error: {str(e)}")
 
-    def get_recent_summaries(self, limit: int = 5):
+    def get_recent_summaries(self, limit: int = 5) -> List[VideoSummary]:
         """Get recent summaries from the database."""
         if not self.verify_connection():
             raise Exception("Database connection is not active")
-            
+        
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop.run_until_complete(self._get_recent_summaries(limit))
+
+    async def _get_summaries_by_language(self, language: str, 
+                                       limit: int = 5) -> List[VideoSummary]:
+        """Async method to get summaries by language."""
         try:
-            return (
-                self.session.query(VideoSummary)
-                .order_by(VideoSummary.timestamp.desc())
-                .limit(limit)
-                .all()
-            )
+            response = await self.client.from_("video_summaries")\
+                .select("*")\
+                .eq("language", language)\
+                .order("timestamp", desc=True)\
+                .limit(limit)\
+                .execute()
+            
+            return [
+                VideoSummary(
+                    id=item['id'],
+                    video_id=item['video_id'],
+                    title=item['title'],
+                    summary=item['summary'],
+                    language=item['language'],
+                    timestamp=datetime.fromisoformat(item['timestamp']),
+                    source_urls=item['source_urls']
+                )
+                for item in response.data
+            ]
         except Exception as e:
             raise Exception(f"Database error: {str(e)}")
 
-    def get_summaries_by_language(self, language: str, limit: int = 5):
+    def get_summaries_by_language(self, language: str, 
+                                limit: int = 5) -> List[VideoSummary]:
         """Get summaries filtered by language."""
         if not self.verify_connection():
             raise Exception("Database connection is not active")
-            
-        try:
-            return (
-                self.session.query(VideoSummary)
-                .filter(VideoSummary.language == language)
-                .order_by(VideoSummary.timestamp.desc())
-                .limit(limit)
-                .all()
-            )
-        except Exception as e:
-            raise Exception(f"Database error: {str(e)}")
+        
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop.run_until_complete(
+            self._get_summaries_by_language(language, limit)
+        )
 
     def __del__(self):
-        """Cleanup database connections."""
-        try:
-            if hasattr(self, 'session'):
-                self.session.close()
-        except:
-            pass
+        """Cleanup."""
+        pass  # No cleanup needed for REST client
