@@ -1,0 +1,15 @@
+# Pythonのバーチャル環境
+venv/
+# 環境変数ファイル
+.env.local
+# Pythonのキャッシュファイル
+__pycache__/
+*.py[cod]
+# Jupyter Notebookのチェックポイント
+.ipynb_checkpoints/
+# その他のIDEやエディタの設定ファイル
+.idea/
+.vscode/
+# OSによる隠しファイル
+.DS_Store
+ 
