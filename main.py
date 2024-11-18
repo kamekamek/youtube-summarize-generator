@@ -4,6 +4,9 @@ from utils import YouTubeHandler, GeminiProcessor
 from utils.db_handler import DatabaseHandler
 from datetime import datetime
 import traceback
+from dotenv import load_dotenv
+
+load_dotenv()  # .envファイルから環境変数を読み込む
 
 # Page configuration must be the first Streamlit command
 st.set_page_config(
