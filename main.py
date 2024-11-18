@@ -35,6 +35,7 @@ TRANSLATIONS = {
         'sources': 'ソース',
         'language_selector': '言語を選択',
         'recommendations': 'おすすめの動画',
+        'no_recommendations': 'おすすめの動画を取得できませんでした',
         'recent_summaries': '最近生成された要約',
         'view_history': '履歴を表示',
         'summary_date_format': '%Y年%m月%d日 %H:%M',
@@ -48,7 +49,8 @@ TRANSLATIONS = {
         'history_section': '履歴',
         'db_connecting': 'データベースに接続中...',
         'db_connected': 'データベース接続完了',
-        'db_connection_failed': 'データベース接続に失敗しました'
+        'db_connection_failed': 'データベース接続に失敗しました',
+        'loading_recommendations': 'おすすめ動画を読み込み中...'
     },
     'en': {
         'page_title': 'Summary Generator',
@@ -65,6 +67,7 @@ TRANSLATIONS = {
         'sources': 'Sources',
         'language_selector': 'Select Language',
         'recommendations': 'Recommended Videos',
+        'no_recommendations': 'Could not fetch recommended videos',
         'recent_summaries': 'Recent Summaries',
         'view_history': 'View History',
         'summary_date_format': '%Y-%m-%d %H:%M',
@@ -78,7 +81,8 @@ TRANSLATIONS = {
         'history_section': 'History',
         'db_connecting': 'Connecting to database...',
         'db_connected': 'Database connected successfully',
-        'db_connection_failed': 'Database connection failed'
+        'db_connection_failed': 'Database connection failed',
+        'loading_recommendations': 'Loading recommended videos...'
     },
     'zh': {
         'page_title': '摘要生成器',
@@ -95,6 +99,7 @@ TRANSLATIONS = {
         'sources': '来源',
         'language_selector': '选择语言',
         'recommendations': '推荐视频',
+        'no_recommendations': '无法获取推荐视频',
         'recent_summaries': '最近的摘要',
         'view_history': '查看历史',
         'summary_date_format': '%Y年%m月%d日 %H:%M',
@@ -108,7 +113,8 @@ TRANSLATIONS = {
         'history_section': '历史记录',
         'db_connecting': '正在连接数据库...',
         'db_connected': '数据库连接成功',
-        'db_connection_failed': '数据库连接失败'
+        'db_connection_failed': '数据库连接失败',
+        'loading_recommendations': '正在加载推荐视频...'
     }
 }
 
@@ -120,6 +126,8 @@ def initialize_session_state():
         st.session_state.processing = False
     if 'language' not in st.session_state:
         st.session_state.language = 'ja'  # Default to Japanese
+    if 'recommendations' not in st.session_state:
+        st.session_state.recommendations = []
     
     # Initialize database connection
     if 'db_handler' not in st.session_state:
@@ -261,11 +269,17 @@ def main():
                             st.success(get_text('summary_saved'))
 
                     # Get video recommendations
-                    recommendations = youtube_handler.get_recommendations(valid_urls[0])
-                    st.session_state.recommendations = recommendations
+                    with st.spinner(get_text('loading_recommendations')):
+                        try:
+                            recommendations = youtube_handler.get_recommendations(valid_urls[0])
+                            st.session_state.recommendations = recommendations
+                        except Exception as e:
+                            st.warning(f"{get_text('no_recommendations')}: {str(e)}")
+                            st.session_state.recommendations = []
 
             except Exception as e:
                 st.error(f"{get_text('error_occurred')}{str(e)}")
+                traceback.print_exc()
             finally:
                 st.session_state.processing = False
 
@@ -287,7 +301,7 @@ def main():
                            unsafe_allow_html=True)
             
             # Display recommendations
-            if hasattr(st.session_state, 'recommendations'):
+            if st.session_state.recommendations:
                 st.markdown(f"### {get_text('recommendations')}")
                 for video in st.session_state.recommendations:
                     st.markdown(
@@ -296,8 +310,12 @@ def main():
                         f'{video["title"]}</a>',
                         unsafe_allow_html=True
                     )
+            elif st.session_state.generated_article:  # Only show this message if an article was generated
+                st.warning(get_text('no_recommendations'))
+
     except Exception as e:
         st.error(f"{get_text('error_occurred')}{str(e)}")
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main()

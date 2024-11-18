@@ -67,10 +67,13 @@ class YouTubeHandler:
                         'title': item['snippet']['title'],
                         'thumbnail': item['snippet']['thumbnails']['default']['url']
                     })
+            
+            if not recommendations:
+                raise Exception("No recommendations found")
+                
             return recommendations
         except Exception as e:
-            print(f"Error getting recommendations: {str(e)}")
-            return []
+            raise Exception(f"Error getting recommendations: {str(e)}")
 
     def process_videos(self, urls: List[str]) -> List[Dict]:
         """Process multiple YouTube videos."""
