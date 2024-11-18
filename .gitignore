@@ -27,7 +27,9 @@ Pipfile.lock
 *.log
 # ローカル設定ファイル
 .pythonlibs/
+.upm/
 .local/
-.cache
-db
-.upm
+db/
+.replit
+replit_zip_error_log.txt
+replit.nix
