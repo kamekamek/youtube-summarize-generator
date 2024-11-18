@@ -25,4 +25,5 @@ Pipfile.lock
 .env
 # ログファイル
 *.log
- 
+.*
+.local 
