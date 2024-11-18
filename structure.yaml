@@ -1,0 +1,111 @@
+main:
+    youtube-summarize:
+      .gitignore:
+        content: |-
+          Git除外設定
+          外部依存: なし
+          機能:
+          - 一時ファイル除外
+          - 環境設定ファイル除外
+          - キャッシュファイル除外
+        dependency: []
+      .streamlit/config.toml:
+        content: |-
+          Streamlit設定ファイル
+          外部依存: なし
+          機能:
+          - サーバー設定
+          - テーマ設定
+        dependency: []
+      README.md:
+        content: |-
+          プロジェクトドキュメント
+          外部依存: なし
+          機能:
+          - インストール手順
+          - 環境設定手順
+          - 実行方法説明
+        dependency: []
+      assets/style.css:
+        content: |-
+          スタイル定義
+          外部依存:
+          - Google Fonts (Inter)
+          機能:
+          - アプリケーション全体のスタイリング
+          - レスポンシブデザイン
+        dependency: []
+      main.py:
+        content: |-
+          メインアプリケーション
+          外部依存:
+          - streamlit
+          - dotenv
+          - os
+          機能:
+          - YouTubeビデオ要約生成
+          - 多言語サポート
+          - データベース連携
+        dependency:
+          - utils/__init__.py
+          - utils/db_handler.py
+          - assets/style.css
+      pyproject.toml:
+        content: |-
+          プロジェクト設定
+          外部依存:
+          - aiohttp
+          - asyncio
+          - google-api-python-client
+          - google-generativeai
+          - postgrest
+          - streamlit
+          - supabase
+          機能:
+          - プロジェクト依存関係管理
+          - Python環境設定
+        dependency: []
+      utils/__init__.py:
+        content: |-
+          ユーティリティモジュール初期化
+          外部依存: なし
+          機能:
+          - YouTubeHandlerとGeminiProcessorのエクスポート
+        dependency:
+          - utils/youtube_handler.py
+          - utils/gemini_processor.py
+      utils/db_handler.py:
+        content: |-
+          データベースハンドラー
+          外部依存:
+          - datetime
+          - os
+          - supabase
+          - streamlit
+          機能:
+          - Supabaseデータベース接続管理
+          - 要約の保存と取得
+        dependency: []
+      utils/gemini_processor.py:
+        content: |-
+          Gemini AI処理クラス
+          外部依存:
+          - google.generativeai
+          - re
+          機能:
+          - 多言語記事生成
+          - プロンプト管理
+          - 中国語テキスト処理
+        dependency: []
+      utils/youtube_handler.py:
+        content: |-
+          YouTube API操作クラス
+          外部依存:
+          - googleapiclient
+          - youtube_transcript_api
+          - re
+          機能:
+          - 動画情報取得
+          - 字幕取得
+          - 関連動画推奨
+        dependency: []
