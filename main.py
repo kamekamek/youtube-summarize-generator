@@ -34,8 +34,8 @@ TRANSLATIONS = {
         'generated_article': '生成された要約',
         'sources': 'ソース',
         'language_selector': '言語を選択',
-        'recommendations': 'おすすめの動画',
-        'no_recommendations': 'おすすめの動画を取得できませんでした',
+        'channel_videos': 'チャンネルの他の動画',
+        'no_channel_videos': 'チャンネルの他の動画を取得できませんでした',
         'recent_summaries': '最近生成された要約',
         'view_history': '履歴を表示',
         'summary_date_format': '%Y年%m月%d日 %H:%M',
@@ -50,7 +50,7 @@ TRANSLATIONS = {
         'db_connecting': 'データベースに接続中...',
         'db_connected': 'データベース接続完了',
         'db_connection_failed': 'データベース接続に失敗しました',
-        'loading_recommendations': 'おすすめ動画を読み込み中...'
+        'loading_channel_videos': 'チャンネルの動画を読み込み中...'
     },
     'en': {
         'page_title': 'Summary Generator',
@@ -66,8 +66,8 @@ TRANSLATIONS = {
         'generated_article': 'Generated Summary',
         'sources': 'Sources',
         'language_selector': 'Select Language',
-        'recommendations': 'Recommended Videos',
-        'no_recommendations': 'Could not fetch recommended videos',
+        'channel_videos': 'More Videos from Channel',
+        'no_channel_videos': 'Could not fetch channel videos',
         'recent_summaries': 'Recent Summaries',
         'view_history': 'View History',
         'summary_date_format': '%Y-%m-%d %H:%M',
@@ -82,7 +82,7 @@ TRANSLATIONS = {
         'db_connecting': 'Connecting to database...',
         'db_connected': 'Database connected successfully',
         'db_connection_failed': 'Database connection failed',
-        'loading_recommendations': 'Loading recommended videos...'
+        'loading_channel_videos': 'Loading channel videos...'
     },
     'zh': {
         'page_title': '摘要生成器',
@@ -98,8 +98,8 @@ TRANSLATIONS = {
         'generated_article': '生成的摘要',
         'sources': '来源',
         'language_selector': '选择语言',
-        'recommendations': '推荐视频',
-        'no_recommendations': '无法获取推荐视频',
+        'channel_videos': '频道的更多视频',
+        'no_channel_videos': '无法获取频道视频',
         'recent_summaries': '最近的摘要',
         'view_history': '查看历史',
         'summary_date_format': '%Y年%m月%d日 %H:%M',
@@ -114,7 +114,7 @@ TRANSLATIONS = {
         'db_connecting': '正在连接数据库...',
         'db_connected': '数据库连接成功',
         'db_connection_failed': '数据库连接失败',
-        'loading_recommendations': '正在加载推荐视频...'
+        'loading_channel_videos': '正在加载频道视频...'
     }
 }
 
@@ -126,8 +126,8 @@ def initialize_session_state():
         st.session_state.processing = False
     if 'language' not in st.session_state:
         st.session_state.language = 'ja'  # Default to Japanese
-    if 'recommendations' not in st.session_state:
-        st.session_state.recommendations = []
+    if 'channel_videos' not in st.session_state:
+        st.session_state.channel_videos = []
     
     # Initialize database connection
     if 'db_handler' not in st.session_state:
@@ -268,14 +268,14 @@ def main():
                             )
                             st.success(get_text('summary_saved'))
 
-                    # Get video recommendations
-                    with st.spinner(get_text('loading_recommendations')):
+                    # Get channel videos
+                    with st.spinner(get_text('loading_channel_videos')):
                         try:
-                            recommendations = youtube_handler.get_recommendations(valid_urls[0])
-                            st.session_state.recommendations = recommendations
+                            channel_videos = youtube_handler.get_channel_latest_videos(valid_urls[0])
+                            st.session_state.channel_videos = channel_videos
                         except Exception as e:
-                            st.warning(f"{get_text('no_recommendations')}: {str(e)}")
-                            st.session_state.recommendations = []
+                            st.warning(f"{get_text('no_channel_videos')}: {str(e)}")
+                            st.session_state.channel_videos = []
 
             except Exception as e:
                 st.error(f"{get_text('error_occurred')}{str(e)}")
@@ -290,9 +290,7 @@ def main():
         # Display generated article
         if st.session_state.generated_article:
             st.markdown(f"### {get_text('generated_article')}")
-            st.markdown('<div class="article-container">', unsafe_allow_html=True)
             st.markdown(st.session_state.generated_article)
-            st.markdown('</div>', unsafe_allow_html=True)
 
             # Source attribution
             st.markdown(f"### {get_text('sources')}")
@@ -300,10 +298,10 @@ def main():
                 st.markdown(f'<a href="{url}" class="source-link" target="_blank">{url}</a>', 
                            unsafe_allow_html=True)
             
-            # Display recommendations
-            if st.session_state.recommendations:
-                st.markdown(f"### {get_text('recommendations')}")
-                for video in st.session_state.recommendations:
+            # Display channel videos
+            if st.session_state.channel_videos:
+                st.markdown(f"### {get_text('channel_videos')}")
+                for video in st.session_state.channel_videos:
                     st.markdown(
                         f'<a href="https://youtube.com/watch?v={video["id"]}" class="video-recommendation" target="_blank">'
                         f'<img src="{video["thumbnail"]}" style="width:120px;margin-right:10px;">'
@@ -311,7 +309,7 @@ def main():
                         unsafe_allow_html=True
                     )
             elif st.session_state.generated_article:  # Only show this message if an article was generated
-                st.warning(get_text('no_recommendations'))
+                st.warning(get_text('no_channel_videos'))
 
     except Exception as e:
         st.error(f"{get_text('error_occurred')}{str(e)}")
