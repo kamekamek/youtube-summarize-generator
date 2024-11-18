@@ -22,7 +22,7 @@ class YouTubeHandler:
         raise ValueError("Invalid YouTube URL")
 
     def get_video_details(self, video_id: str) -> Dict:
-        """Get video title and description."""
+        """Get video title, description, and thumbnail."""
         try:
             response = self.youtube.videos().list(
                 part='snippet',
@@ -36,7 +36,8 @@ class YouTubeHandler:
             return {
                 'title': snippet['title'],
                 'description': snippet['description'],
-                'channelId': snippet['channelId']  # チャンネルIDも取得
+                'channelId': snippet['channelId'],
+                'thumbnail': snippet['thumbnails']['high']['url']  # 高解像度のサムネイルを取得
             }
         except google.api_core.exceptions.Error as e:
             raise Exception(f"YouTube API error: {str(e)}")
@@ -76,7 +77,7 @@ class YouTubeHandler:
                         latest_videos.append({
                             'id': item['id']['videoId'],
                             'title': item['snippet']['title'],
-                            'thumbnail': item['snippet']['thumbnails']['default']['url']
+                            'thumbnail': item['snippet']['thumbnails']['high']['url']  # 高解像度のサムネイルを使用
                         })
                         if len(latest_videos) >= max_results:
                             break
@@ -103,6 +104,7 @@ class YouTubeHandler:
                     'video_id': video_id,
                     'title': details['title'],
                     'description': details['description'],
+                    'thumbnail': details['thumbnail'],  # サムネイル情報を追加
                     'transcript': transcript
                 })
             except Exception as e:

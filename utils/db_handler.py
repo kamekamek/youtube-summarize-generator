@@ -7,7 +7,8 @@ import streamlit as st
 
 class VideoSummary:
     def __init__(self, id: int, video_id: str, title: str, summary: str, 
-                 language: str, timestamp: datetime, source_urls: str):
+                 language: str, timestamp: datetime, source_urls: str,
+                 thumbnail_url: str = None):
         self.id = id
         self.video_id = video_id
         self.title = title
@@ -15,6 +16,7 @@ class VideoSummary:
         self.language = language
         self.timestamp = timestamp
         self.source_urls = source_urls
+        self.thumbnail_url = thumbnail_url
 
 class DatabaseHandler:
     def __init__(self):
@@ -53,7 +55,7 @@ class DatabaseHandler:
             return False
 
     def save_summary(self, video_id: str, title: str, summary: str, 
-                    language: str, source_urls: str) -> bool:
+                    language: str, source_urls: str, thumbnail_url: str = None) -> bool:
         """Save a video summary to the database."""
         try:
             if not self.verify_connection():
@@ -66,6 +68,7 @@ class DatabaseHandler:
                 "summary": summary,
                 "language": language,
                 "source_urls": source_urls,
+                "thumbnail_url": thumbnail_url,
                 "timestamp": datetime.utcnow().isoformat()
             }
             
@@ -78,7 +81,7 @@ class DatabaseHandler:
             st.error(f"Stack trace: {traceback.format_exc()}")
             raise Exception(f"Database error: {str(e)}")
 
-    def get_recent_summaries(self, limit: int = 5) -> List[VideoSummary]:
+    def get_recent_summaries(self, limit: int = 10) -> List[VideoSummary]:
         """Get recent summaries from the database."""
         try:
             if not self.verify_connection():
@@ -100,7 +103,8 @@ class DatabaseHandler:
                     summary=item['summary'],
                     language=item['language'],
                     timestamp=datetime.fromisoformat(item['timestamp']),
-                    source_urls=item['source_urls']
+                    source_urls=item['source_urls'],
+                    thumbnail_url=item.get('thumbnail_url')
                 )
                 for item in response.data
             ] if response.data else []
@@ -110,7 +114,7 @@ class DatabaseHandler:
             return []
 
     def get_summaries_by_language(self, language: str, 
-                                limit: int = 5) -> List[VideoSummary]:
+                                limit: int = 10) -> List[VideoSummary]:
         """Get summaries filtered by language."""
         try:
             if not self.verify_connection():
@@ -133,7 +137,8 @@ class DatabaseHandler:
                     summary=item['summary'],
                     language=item['language'],
                     timestamp=datetime.fromisoformat(item['timestamp']),
-                    source_urls=item['source_urls']
+                    source_urls=item['source_urls'],
+                    thumbnail_url=item.get('thumbnail_url')
                 )
                 for item in response.data
             ] if response.data else []
