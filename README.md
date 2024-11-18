@@ -41,4 +41,4 @@ SUPABASE_KEY=your_supabase_key
 
 streamlit run main.py
 
-これでプロジェクトがローカル環境で実行できるようになります。
+これでプロジェクトがローカル環境で実行できるようになります。# youtube-summarize-generator
