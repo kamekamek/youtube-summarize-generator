@@ -25,5 +25,9 @@ Pipfile.lock
 .env
 # ログファイル
 *.log
-.*
-.local 
+# ローカル設定ファイル
+.pythonlibs/
+.local/
+.cache
+db
+.upm
