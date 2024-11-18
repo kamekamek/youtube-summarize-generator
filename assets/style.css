@@ -70,6 +70,42 @@ h1, h2, h3 {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+/* Delete button styles */
+button[key^="delete_"] {
+    background-color: #dc2626 !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 6px !important;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    padding: 4px 12px !important;
+    font-size: 12px !important;
+    transition: all 0.2s ease;
+}
+
+button[key^="delete_"]:hover {
+    background-color: #b91c1c !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+button[key^="confirm_"] {
+    background-color: #dc2626 !important;
+    color: #ffffff !important;
+}
+
+button[key^="confirm_"]:hover {
+    background-color: #b91c1c !important;
+}
+
+button[key^="cancel_"] {
+    background-color: #6b7280 !important;
+    color: #ffffff !important;
+}
+
+button[key^="cancel_"]:hover {
+    background-color: #4b5563 !important;
+}
+
 /* Streamlit elements override */
 .stTextInput > div > div > input,
 .stTextArea > div > div > textarea {

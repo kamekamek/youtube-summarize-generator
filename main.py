@@ -50,7 +50,12 @@ TRANSLATIONS = {
         'db_connecting': 'データベースに接続中...',
         'db_connected': 'データベース接続完了',
         'db_connection_failed': 'データベース接続に失敗しました',
-        'loading_channel_videos': 'チャンネルの動画を読み込み中...'
+        'loading_channel_videos': 'チャンネルの動画を読み込み中...',
+        'delete_button': '削除',
+        'delete_confirm': 'この要約を削除してもよろしいですか？',
+        'delete_success': '要約を削除しました',
+        'delete_error': '削除中にエラーが発生しました：',
+        'cancel_button': 'キャンセル'
     },
     'en': {
         'page_title': 'Summary Generator',
@@ -82,7 +87,12 @@ TRANSLATIONS = {
         'db_connecting': 'Connecting to database...',
         'db_connected': 'Database connected successfully',
         'db_connection_failed': 'Database connection failed',
-        'loading_channel_videos': 'Loading channel videos...'
+        'loading_channel_videos': 'Loading channel videos...',
+        'delete_button': 'Delete',
+        'delete_confirm': 'Are you sure you want to delete this summary?',
+        'delete_success': 'Summary deleted successfully',
+        'delete_error': 'Error deleting summary: ',
+        'cancel_button': 'Cancel'
     },
     'zh': {
         'page_title': '摘要生成器',
@@ -114,7 +124,12 @@ TRANSLATIONS = {
         'db_connecting': '正在连接数据库...',
         'db_connected': '数据库连接成功',
         'db_connection_failed': '数据库连接失败',
-        'loading_channel_videos': '正在加载频道视频...'
+        'loading_channel_videos': '正在加载频道视频...',
+        'delete_button': '删除',
+        'delete_confirm': '确定要删除这个摘要吗？',
+        'delete_success': '摘要删除成功',
+        'delete_error': '删除摘要时出错：',
+        'cancel_button': '取消'
     }
 }
 
@@ -128,6 +143,8 @@ def initialize_session_state():
         st.session_state.language = 'ja'  # Default to Japanese
     if 'channel_videos' not in st.session_state:
         st.session_state.channel_videos = []
+    if 'delete_confirmation' not in st.session_state:
+        st.session_state.delete_confirmation = {}
     
     # Initialize database connection
     if 'db_handler' not in st.session_state:
@@ -157,6 +174,30 @@ def get_text(key: str) -> str:
     """Get translated text based on current language."""
     return TRANSLATIONS[st.session_state.language].get(key, key)
 
+def delete_summary(summary_id: int):
+    """Delete a summary and handle the confirmation dialog."""
+    if summary_id not in st.session_state.delete_confirmation:
+        st.session_state.delete_confirmation[summary_id] = False
+    
+    if st.button(get_text('delete_button'), key=f"delete_{summary_id}"):
+        st.session_state.delete_confirmation[summary_id] = True
+    
+    if st.session_state.delete_confirmation[summary_id]:
+        col1, col2 = st.columns([1, 4])
+        with col1:
+            if st.button(get_text('delete_confirm'), key=f"confirm_{summary_id}"):
+                success, message = st.session_state.db_handler.delete_summary(summary_id)
+                if success:
+                    st.success(get_text('delete_success'))
+                    st.session_state.delete_confirmation[summary_id] = False
+                    st.experimental_rerun()
+                else:
+                    st.error(f"{get_text('delete_error')}{message}")
+        with col2:
+            if st.button(get_text('cancel_button'), key=f"cancel_{summary_id}"):
+                st.session_state.delete_confirmation[summary_id] = False
+                st.experimental_rerun()
+
 def display_recent_summaries():
     """Display recent summaries from the database."""
     try:
@@ -178,6 +219,7 @@ def display_recent_summaries():
                     for url in summary.source_urls.split(','):
                         st.markdown(f'<a href="{url.strip()}" target="_blank">{url.strip()}</a>', 
                                 unsafe_allow_html=True)
+                    delete_summary(summary.id)
         else:
             st.info(get_text('no_summaries'))
     except Exception as e:

@@ -1,7 +1,7 @@
 from datetime import datetime
 import os
 from supabase.client import create_client, Client
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import traceback
 import streamlit as st
 
@@ -141,6 +141,42 @@ class DatabaseHandler:
         except Exception as e:
             st.error(f"Error in get_summaries_by_language: {str(e)}")
             return []
+
+    def delete_summary(self, summary_id: int) -> Tuple[bool, str]:
+        """Delete a summary from the database.
+        
+        Args:
+            summary_id: The ID of the summary to delete
+            
+        Returns:
+            Tuple[bool, str]: (Success status, Message)
+        """
+        try:
+            if not self.verify_connection():
+                return False, "Database connection is not active"
+
+            # First verify the summary exists
+            response = self.client.from_('video_summaries')\
+                .select('id')\
+                .eq('id', summary_id)\
+                .execute()
+
+            if not response.data:
+                return False, "Summary not found"
+
+            # Delete the summary
+            response = self.client.from_('video_summaries')\
+                .delete()\
+                .eq('id', summary_id)\
+                .execute()
+
+            return True, "Summary deleted successfully"
+
+        except Exception as e:
+            error_msg = f"Error deleting summary: {str(e)}"
+            st.error(error_msg)
+            st.error(f"Stack trace: {traceback.format_exc()}")
+            return False, error_msg
 
     def __del__(self):
         """Cleanup."""
